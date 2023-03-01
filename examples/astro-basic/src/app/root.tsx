@@ -1,10 +1,30 @@
-import { fetch$, split$, server$ } from '@tanstack/bling'
+import { fetch$, server$, split$ } from '@tanstack/bling'
+import { z } from 'zod'
+import { wrapProcedure } from './@trpc/adapters/bling'
 import { secret } from './secret.server$'
+import { procedure } from './trpc'
 
-const fetchHello = fetch$(() => console.log('Hello world'))
+const greeting = fetch$(
+  wrapProcedure(
+    procedure.input(z.string().optional()).mutation((opts) => {
+      console.log('hello from trpc')
+      return `Hello ${opts.input ?? 'world'}` as const
+    }),
+  ),
+)
 
 function ServerHello() {
-  return <button onClick={() => fetchHello()}>ServerFn Hello</button>
+  return (
+    <button
+      onClick={() => {
+        greeting('blastro + trpc')
+          .then((res) => console.log({ res }))
+          .catch((err) => console.error({ err }))
+      }}
+    >
+      ServerFn Hello
+    </button>
+  )
 }
 
 const splitHello = split$(() => console.log('I am code split!'))
